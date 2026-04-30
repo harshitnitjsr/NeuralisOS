@@ -1,0 +1,401 @@
+"use client";
+
+import { useState, useRef, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Send,
+  Bot,
+  User,
+  Brain,
+  Cpu,
+  Shield,
+  TrendingUp,
+  Users,
+  Gavel,
+  Megaphone,
+  Loader2,
+  ChevronDown,
+  Sparkles,
+  Zap,
+  Network,
+  Building2,
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+const AGENT_ICONS: Record<string, React.ReactNode> = {
+  Support: <Users className="w-3.5 h-3.5" />,
+  DevOps: <Cpu className="w-3.5 h-3.5" />,
+  Finance: <TrendingUp className="w-3.5 h-3.5" />,
+  Legal: <Gavel className="w-3.5 h-3.5" />,
+  HR: <Shield className="w-3.5 h-3.5" />,
+  Marketing: <Megaphone className="w-3.5 h-3.5" />,
+  Sales: <Sparkles className="w-3.5 h-3.5" />,
+  unknown: <Bot className="w-3.5 h-3.5" />,
+};
+
+const AGENT_COLORS: Record<string, string> = {
+  Support: "text-blue-400 border-blue-400/20 bg-blue-400/10",
+  DevOps: "text-orange-400 border-orange-400/20 bg-orange-400/10",
+  Finance: "text-emerald-400 border-emerald-400/20 bg-emerald-400/10",
+  Legal: "text-purple-400 border-purple-400/20 bg-purple-400/10",
+  HR: "text-pink-400 border-pink-400/20 bg-pink-400/10",
+  Marketing: "text-amber-400 border-amber-400/20 bg-amber-400/10",
+  Sales: "text-cyan-400 border-cyan-400/20 bg-cyan-400/10",
+  unknown: "text-zinc-400 border-zinc-400/20 bg-zinc-400/10",
+};
+
+const MEMORY_LAYERS = [
+  {
+    label: "Qdrant Semantic",
+    icon: <Brain className="w-3 h-3" />,
+    color: "text-indigo-400",
+  },
+  {
+    label: "Neo4j Graph",
+    icon: <Network className="w-3 h-3" />,
+    color: "text-cyan-400",
+  },
+  {
+    label: "Mem0 Episodic",
+    icon: <Zap className="w-3 h-3" />,
+    color: "text-amber-400",
+  },
+];
+
+interface Message {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  agent?: string;
+  memoryFetched?: boolean;
+  timestamp: Date;
+}
+
+// Inner component that uses useSearchParams
+function ChatInner() {
+  const searchParams = useSearchParams();
+  const orgId = searchParams.get("org_id") || "default_tenant";
+  const orgName = searchParams.get("org_name") || "NeuralisOS";
+  const orgCtx =
+    searchParams.get("org_ctx") || "We are an autonomous AI organization.";
+
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: "welcome",
+      role: "assistant",
+      content: `Hello! I'm the AI workforce for **${orgName}**. I can route your request to the best specialist — Support, DevOps, Finance, Legal, HR, Sales, or Marketing.`,
+      agent: "unknown",
+      memoryFetched: false,
+      timestamp: new Date(),
+    },
+  ]);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [companyName, setCompanyName] = useState(orgName);
+  const [companyContext, setCompanyContext] = useState(orgCtx);
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const sendMessage = async () => {
+    const trimmed = input.trim();
+    if (!trimmed || isLoading) return;
+
+    const userMsg: Message = {
+      id: Date.now().toString(),
+      role: "user",
+      content: trimmed,
+      timestamp: new Date(),
+    };
+
+    setMessages((prev) => [...prev, userMsg]);
+    setInput("");
+    setIsLoading(true);
+
+    try {
+      const res = await fetch(`${API_BASE}/agents/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: trimmed,
+          tenant_id: orgId,
+          user_id: "user_001",
+          company_name: companyName,
+          company_context: companyContext,
+        }),
+      });
+
+      if (!res.ok) throw new Error(`API Error: ${res.status}`);
+      const data = await res.json();
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content: data.response || "No response generated.",
+          agent: data.next_agent || "unknown",
+          memoryFetched: true,
+          timestamp: new Date(),
+        },
+      ]);
+    } catch (err: unknown) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content: `⚠️ Backend connection failed. Make sure the NeuralisOS API is running at ${API_BASE}. ${err instanceof Error ? err.message : ""}`,
+          agent: "unknown",
+          memoryFetched: false,
+          timestamp: new Date(),
+        },
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col h-[calc(100vh-4rem)] max-w-5xl mx-auto gap-4">
+      {/* Header */}
+      <div className="flex items-center justify-between flex-shrink-0">
+        <div className="flex items-center gap-3">
+          {orgId !== "default_tenant" && (
+            <Link href="/organizations">
+              <button className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 transition-colors">
+                <Building2 className="w-3.5 h-3.5" /> Organizations
+              </button>
+            </Link>
+          )}
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Chat Terminal</h1>
+            <p className="text-zinc-500 text-sm mt-0.5">
+              {orgId !== "default_tenant"
+                ? `Org: ${companyName}`
+                : "Multi-tenant AI workforce"}{" "}
+              · Mem0 + Neo4j + Qdrant
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={() => setShowSettings(!showSettings)}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-sm text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
+        >
+          <span>{companyName}</span>
+          <ChevronDown
+            className={`w-3.5 h-3.5 transition-transform ${showSettings ? "rotate-180" : ""}`}
+          />
+        </button>
+      </div>
+
+      {/* Settings Panel */}
+      <AnimatePresence>
+        {showSettings && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="flex-shrink-0 overflow-hidden"
+          >
+            <div className="p-4 rounded-xl bg-white/[0.02] border border-white/10 grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs text-zinc-500 mb-1 block">
+                  Company Name
+                </label>
+                <input
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary/50"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-zinc-500 mb-1 block">
+                  Company Context
+                </label>
+                <input
+                  value={companyContext}
+                  onChange={(e) => setCompanyContext(e.target.value)}
+                  className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary/50"
+                />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Memory Layer Status Bar */}
+      <div className="flex-shrink-0 flex items-center gap-3 px-4 py-2 rounded-xl bg-white/[0.02] border border-white/5">
+        <span className="text-xs text-zinc-600 font-medium uppercase tracking-wider">
+          Memory Layers
+        </span>
+        <div className="flex items-center gap-4">
+          {MEMORY_LAYERS.map((layer) => (
+            <div
+              key={layer.label}
+              className={`flex items-center gap-1.5 text-xs ${layer.color}`}
+            >
+              {layer.icon}
+              <span>{layer.label}</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
+            </div>
+          ))}
+        </div>
+        {orgId !== "default_tenant" && (
+          <span className="ml-auto text-xs text-zinc-700 font-mono">
+            tenant: {orgId.slice(0, 8)}…
+          </span>
+        )}
+      </div>
+
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto space-y-4 pr-1 scroll-smooth">
+        <AnimatePresence initial={false}>
+          {messages.map((msg) => (
+            <motion.div
+              key={msg.id}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25 }}
+              className={`flex gap-3 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}
+            >
+              <div
+                className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center
+                ${
+                  msg.role === "user"
+                    ? "bg-primary/20 text-primary border border-primary/30"
+                    : "bg-white/5 text-zinc-400 border border-white/10"
+                }`}
+              >
+                {msg.role === "user" ? (
+                  <User className="w-4 h-4" />
+                ) : (
+                  <Bot className="w-4 h-4" />
+                )}
+              </div>
+
+              <div
+                className={`max-w-[70%] space-y-1.5 ${msg.role === "user" ? "items-end" : "items-start"} flex flex-col`}
+              >
+                {msg.role === "assistant" && msg.agent && (
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      variant="outline"
+                      className={`text-xs gap-1 ${AGENT_COLORS[msg.agent] || AGENT_COLORS.unknown}`}
+                    >
+                      {AGENT_ICONS[msg.agent] || AGENT_ICONS.unknown}
+                      {msg.agent} Agent
+                    </Badge>
+                    {msg.memoryFetched && (
+                      <span className="text-xs text-zinc-600 flex items-center gap-1">
+                        <Brain className="w-3 h-3 text-indigo-500" /> Memory
+                        injected
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                <div
+                  className={`px-4 py-3 rounded-2xl text-sm leading-relaxed
+                  ${
+                    msg.role === "user"
+                      ? "bg-primary/15 border border-primary/20 text-white rounded-tr-sm"
+                      : "bg-white/[0.04] border border-white/8 text-zinc-200 rounded-tl-sm"
+                  }`}
+                >
+                  {msg.content}
+                </div>
+
+                <span className="text-xs text-zinc-700 px-1">
+                  {msg.timestamp.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+
+        {isLoading && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex gap-3"
+          >
+            <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+              <Bot className="w-4 h-4 text-zinc-400" />
+            </div>
+            <div className="px-4 py-3 rounded-2xl bg-white/[0.04] border border-white/8 rounded-tl-sm flex items-center gap-2">
+              <Loader2 className="w-4 h-4 text-primary animate-spin" />
+              <p className="text-sm text-zinc-400">
+                Querying Mem0 + Neo4j + Qdrant...
+              </p>
+            </div>
+          </motion.div>
+        )}
+        <div ref={bottomRef} />
+      </div>
+
+      {/* Input */}
+      <div className="flex-shrink-0">
+        <div className="flex items-end gap-3 p-3 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-sm">
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+              }
+            }}
+            placeholder={`Ask ${companyName}'s AI workforce anything...`}
+            rows={1}
+            className="flex-1 bg-transparent text-sm text-white placeholder-zinc-600 resize-none focus:outline-none max-h-32 py-1"
+          />
+          <button
+            id="send-chat-btn"
+            onClick={sendMessage}
+            disabled={isLoading || !input.trim()}
+            className="flex-shrink-0 w-9 h-9 rounded-xl bg-primary flex items-center justify-center text-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-primary/80 transition-colors"
+          >
+            <Send className="w-4 h-4" />
+          </button>
+        </div>
+        <p className="text-center text-xs text-zinc-700 mt-2">
+          Press{" "}
+          <kbd className="text-zinc-500 px-1 rounded bg-white/5 border border-white/10">
+            Enter
+          </kbd>{" "}
+          to send ·{" "}
+          <kbd className="text-zinc-500 px-1 rounded bg-white/5 border border-white/10">
+            Shift+Enter
+          </kbd>{" "}
+          for newline
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// Wrap in Suspense because useSearchParams requires it in Next.js app router
+export default function ChatPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-6 h-6 text-primary animate-spin" />
+        </div>
+      }
+    >
+      <ChatInner />
+    </Suspense>
+  );
+}
