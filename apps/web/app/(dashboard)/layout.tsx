@@ -36,21 +36,28 @@ export default function DashboardLayout({
   ];
 
   return (
-    <div className="flex h-screen bg-black text-white">
-      {/* Sidebar */}
-      <div className="w-64 border-r border-white/10 bg-zinc-950 flex flex-col">
-        <div className="h-16 flex items-center px-6 border-b border-white/10">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center">
-              <Zap className="w-3 h-3 text-white" />
+    <div className="flex h-screen bg-[#0a0a0a] text-zinc-100 overflow-hidden font-sans selection:bg-primary/30">
+      {/* Sidebar - Sleek Glass Panel */}
+      <div className="w-[260px] border-r border-white/[0.05] bg-black/40 backdrop-blur-2xl flex flex-col relative z-20 shadow-[4px_0_24px_rgba(0,0,0,0.2)]">
+        {/* Glow effect at top left */}
+        <div className="absolute top-0 left-0 w-full h-[150px] bg-gradient-to-b from-primary/10 to-transparent pointer-events-none opacity-50" />
+
+        <div className="h-16 flex items-center px-6 border-b border-white/[0.05] relative">
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-primary via-purple-500 to-indigo-500 flex items-center justify-center p-[1px] group-hover:shadow-[0_0_15px_rgba(124,58,237,0.5)] transition-all duration-300">
+              <div className="w-full h-full bg-black/50 rounded-[10px] flex items-center justify-center backdrop-blur-sm">
+                <Zap className="w-3.5 h-3.5 text-white" />
+              </div>
             </div>
-            <span className="font-bold tracking-tight">NeuralisOS</span>
+            <span className="font-semibold tracking-wide text-sm bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-400">
+              NeuralisOS
+            </span>
           </Link>
         </div>
 
-        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-          <div className="px-3 mb-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider">
-            Workspace
+        <nav className="flex-1 overflow-y-auto py-6 px-3.5 space-y-1.5 relative">
+          <div className="px-3 mb-3 text-[10px] font-bold text-zinc-600 uppercase tracking-widest">
+            Workspace context
           </div>
           {navigation.map((item) => {
             const isActive = pathname === item.href;
@@ -58,34 +65,50 @@ export default function DashboardLayout({
               <Link
                 key={item.name}
                 href={item.href}
-                className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 text-sm ${
                   isActive
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "text-zinc-400 hover:text-white hover:bg-white/5"
+                    ? "bg-white/[0.06] text-primary shadow-sm border border-white/[0.05]"
+                    : "text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.02] border border-transparent"
                 }`}
               >
                 <item.icon
-                  className={`w-4 h-4 ${isActive ? "text-primary" : "text-zinc-400"}`}
+                  className={`w-[18px] h-[18px] ${
+                    isActive
+                      ? "text-primary drop-shadow-[0_0_8px_rgba(124,58,237,0.5)]"
+                      : "text-zinc-500"
+                  } transition-colors duration-300`}
                 />
-                {item.name}
+                <span className={isActive ? "font-medium" : "font-normal"}>
+                  {item.name}
+                </span>
               </Link>
             );
           })}
         </nav>
 
-        <div className="p-4 border-t border-white/10 flex items-center gap-3">
-          <UserButton afterSignOutUrl="/" />
+        <div className="p-5 border-t border-white/[0.05] flex items-center gap-3 bg-white/[0.01]">
+          <div className="ring-2 ring-white/10 rounded-full p-[2px] transition-all hover:ring-primary/40">
+            <UserButton
+              afterSignOutUrl="/"
+              appearance={{ elements: { avatarBox: "w-8 h-8" } }}
+            />
+          </div>
           <div className="flex flex-col">
-            <span className="text-sm font-medium">Enterprise Admin</span>
-            <span className="text-xs text-zinc-500">Acme Corp</span>
+            <span className="text-sm font-medium text-zinc-200">
+              Enterprise Admin
+            </span>
+            <span className="text-xs text-zinc-500 font-medium">Acme Corp</span>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-black relative">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/5 via-black to-black pointer-events-none" />
-        <div className="flex-1 overflow-y-auto z-10 p-8">{children}</div>
+      {/* Main Content Area - Canvas */}
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#0A0A0A] relative">
+        {/* Subtle radial canvas highlight */}
+        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-[radial-gradient(ellipse_at_top_right,rgba(124,58,237,0.05),transparent_70%)] pointer-events-none" />
+        <div className="flex-1 overflow-y-auto z-10 p-8 md:p-12 h-[100vh] scroll-smooth relative">
+          <div className="max-w-[1400px] mx-auto w-full">{children}</div>
+        </div>
       </main>
     </div>
   );

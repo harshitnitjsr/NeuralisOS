@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Embed Test Sandbox</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #f4f4f5;
+      color: #18181b;
+      margin: 0;
+      padding: 40px;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    h1 { margin-top: 0; color: #7c3aed; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Acme Corp - Sandbox</h1>
+    <p>This is a blank test website. The chat widget should appear in the bottom right corner of this screen.</p>
+    <p>If you see the widget, click it to expand the chatbot and test the multi-agent functionality!</p>
+    <p><em>Note: Do not test embed codes in the Developer Console of strict websites like Google.com, as their Content Security Policy (CSP) will block iframes.</em></p>
+  </div>
+
+  <!-- Paste your script below here -->
+  <script>
+    (function(){
+      var EMBED_URL="http://localhost:3000/embed/9ad31ed8-095e-4730-9bb4-393a35bf5315";
+      var btn=document.createElement("div");
+      btn.id="neuralis-chat-btn";
+      btn.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
+      Object.assign(btn.style,{position:"fixed",bottom:"24px",right:"24px",width:"56px",height:"56px",borderRadius:"50%",background:"linear-gradient(135deg,#7c3aed,#6d28d9)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",boxShadow:"0 4px 20px rgba(124,58,237,0.5)",zIndex:"9999",transition:"transform 0.2s,box-shadow 0.2s"});
+      btn.onmouseenter=function(){btn.style.transform="scale(1.1)";btn.style.boxShadow="0 6px 28px rgba(124,58,237,0.7)"};
+      btn.onmouseleave=function(){btn.style.transform="scale(1)";btn.style.boxShadow="0 4px 20px rgba(124,58,237,0.5)"};
+      var frame=document.createElement("iframe");
+      frame.src=EMBED_URL;
+      frame.allow="microphone";
+      Object.assign(frame.style,{position:"fixed",bottom:"96px",right:"24px",width:"380px",height:"560px",border:"none",borderRadius:"20px",boxShadow:"0 20px 60px rgba(0,0,0,0.5)",zIndex:"9998",display:"none",transition:"opacity 0.25s,transform 0.25s",opacity:"0",transform:"translateY(12px)"});
+      var open=false;
+      btn.onclick=function(){
+        open=!open;
+        if(open){frame.style.display="block";setTimeout(function(){frame.style.opacity="1";frame.style.transform="translateY(0)"},10);}
+        else{frame.style.opacity="0";frame.style.transform="translateY(12px)";setTimeout(function(){frame.style.display="none"},260);}
+      };
+      document.body.appendChild(frame);
+      document.body.appendChild(btn);
+    })();
+  </script>
+</body>
+</html>

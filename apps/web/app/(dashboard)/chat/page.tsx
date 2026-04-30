@@ -205,25 +205,25 @@ function ChatInner() {
             exit={{ opacity: 0, height: 0 }}
             className="flex-shrink-0 overflow-hidden"
           >
-            <div className="p-4 rounded-xl bg-white/[0.02] border border-white/10 grid grid-cols-2 gap-4">
+            <div className="p-5 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/[0.05] grid grid-cols-2 gap-5 shadow-sm">
               <div>
-                <label className="text-xs text-zinc-500 mb-1 block">
+                <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider mb-2 block">
                   Company Name
                 </label>
                 <input
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
-                  className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary/50"
+                  className="w-full bg-black/50 border border-white/[0.05] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all font-medium"
                 />
               </div>
               <div>
-                <label className="text-xs text-zinc-500 mb-1 block">
+                <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider mb-2 block">
                   Company Context
                 </label>
                 <input
                   value={companyContext}
                   onChange={(e) => setCompanyContext(e.target.value)}
-                  className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary/50"
+                  className="w-full bg-black/50 border border-white/[0.05] rounded-xl px-4 py-2.5 text-sm text-zinc-300 focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all font-light"
                 />
               </div>
             </div>
@@ -232,24 +232,24 @@ function ChatInner() {
       </AnimatePresence>
 
       {/* Memory Layer Status Bar */}
-      <div className="flex-shrink-0 flex items-center gap-3 px-4 py-2 rounded-xl bg-white/[0.02] border border-white/5">
-        <span className="text-xs text-zinc-600 font-medium uppercase tracking-wider">
-          Memory Layers
+      <div className="flex-shrink-0 flex items-center gap-4 px-5 py-3 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/[0.05]">
+        <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest border-r border-white/10 pr-4">
+          Memory Logic
         </span>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-5">
           {MEMORY_LAYERS.map((layer) => (
             <div
               key={layer.label}
-              className={`flex items-center gap-1.5 text-xs ${layer.color}`}
+              className={`flex items-center gap-1.5 text-xs font-medium ${layer.color}`}
             >
               {layer.icon}
               <span>{layer.label}</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
+              <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse shadow-[0_0_8px_currentColor]" />
             </div>
           ))}
         </div>
         {orgId !== "default_tenant" && (
-          <span className="ml-auto text-xs text-zinc-700 font-mono">
+          <span className="ml-auto text-[11px] text-zinc-600 font-mono bg-white/[0.02] px-2 py-0.5 rounded-md border border-white/[0.05]">
             tenant: {orgId.slice(0, 8)}…
           </span>
         )}
@@ -303,17 +303,17 @@ function ChatInner() {
                 )}
 
                 <div
-                  className={`px-4 py-3 rounded-2xl text-sm leading-relaxed
+                  className={`px-5 py-3.5 rounded-[20px] text-sm leading-[1.6] shadow-sm
                   ${
                     msg.role === "user"
-                      ? "bg-primary/15 border border-primary/20 text-white rounded-tr-sm"
-                      : "bg-white/[0.04] border border-white/8 text-zinc-200 rounded-tl-sm"
+                      ? "bg-primary text-white rounded-tr-sm border border-primary/20 font-medium"
+                      : "bg-black/60 backdrop-blur-xl border border-white/[0.05] text-zinc-300 rounded-tl-sm font-light"
                   }`}
                 >
                   {msg.content}
                 </div>
 
-                <span className="text-xs text-zinc-700 px-1">
+                <span className="text-[10px] text-zinc-600 px-2 font-medium tracking-wide">
                   {msg.timestamp.toLocaleTimeString([], {
                     hour: "2-digit",
                     minute: "2-digit",
@@ -330,23 +330,24 @@ function ChatInner() {
             animate={{ opacity: 1, y: 0 }}
             className="flex gap-3"
           >
-            <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
-              <Bot className="w-4 h-4 text-zinc-400" />
+            <div className="w-8 h-8 rounded-full bg-black/60 backdrop-blur-xl border border-white/[0.05] flex items-center justify-center shadow-inner">
+              <Bot className="w-4 h-4 text-zinc-500" />
             </div>
-            <div className="px-4 py-3 rounded-2xl bg-white/[0.04] border border-white/8 rounded-tl-sm flex items-center gap-2">
+            <div className="px-5 py-3.5 rounded-[20px] bg-black/60 backdrop-blur-xl border border-white/[0.05] rounded-tl-sm flex items-center gap-3">
               <Loader2 className="w-4 h-4 text-primary animate-spin" />
-              <p className="text-sm text-zinc-400">
+              <p className="text-sm font-light text-zinc-400">
                 Querying Mem0 + Neo4j + Qdrant...
               </p>
             </div>
           </motion.div>
         )}
-        <div ref={bottomRef} />
+        <div ref={bottomRef} className="h-4" />
       </div>
 
       {/* Input */}
-      <div className="flex-shrink-0">
-        <div className="flex items-end gap-3 p-3 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-sm">
+      <div className="flex-shrink-0 pt-2">
+        <div className="flex items-end gap-3 p-2.5 rounded-[24px] bg-black/40 backdrop-blur-2xl border border-white/[0.05] shadow-[0_0_30px_rgba(0,0,0,0.5)] relative">
+          <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent pointer-events-none rounded-[24px]" />
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -358,24 +359,24 @@ function ChatInner() {
             }}
             placeholder={`Ask ${companyName}'s AI workforce anything...`}
             rows={1}
-            className="flex-1 bg-transparent text-sm text-white placeholder-zinc-600 resize-none focus:outline-none max-h-32 py-1"
+            className="flex-1 bg-transparent text-[15px] font-light text-white placeholder-zinc-600 resize-none focus:outline-none max-h-32 py-2 px-3 relative z-10"
           />
           <button
             id="send-chat-btn"
             onClick={sendMessage}
             disabled={isLoading || !input.trim()}
-            className="flex-shrink-0 w-9 h-9 rounded-xl bg-primary flex items-center justify-center text-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-primary/80 transition-colors"
+            className="flex-shrink-0 w-11 h-11 rounded-[16px] bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-white disabled:opacity-30 disabled:cursor-not-allowed hover:shadow-[0_0_15px_rgba(124,58,237,0.5)] transition-all z-10"
           >
-            <Send className="w-4 h-4" />
+            <Send className="w-4 h-4 ml-0.5" />
           </button>
         </div>
-        <p className="text-center text-xs text-zinc-700 mt-2">
+        <p className="text-center text-[10px] text-zinc-600 font-medium tracking-wide mt-3 pb-2 uppercase">
           Press{" "}
-          <kbd className="text-zinc-500 px-1 rounded bg-white/5 border border-white/10">
+          <kbd className="text-zinc-400 px-1.5 py-0.5 rounded bg-white/[0.05] border border-white/[0.05] font-sans">
             Enter
           </kbd>{" "}
           to send ·{" "}
-          <kbd className="text-zinc-500 px-1 rounded bg-white/5 border border-white/10">
+          <kbd className="text-zinc-400 px-1.5 py-0.5 rounded bg-white/[0.05] border border-white/[0.05] font-sans">
             Shift+Enter
           </kbd>{" "}
           for newline
