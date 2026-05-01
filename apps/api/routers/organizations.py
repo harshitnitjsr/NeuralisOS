@@ -18,6 +18,7 @@ class OrgCreate(BaseModel):
     name: str
     description: str = ""
     industry: str = ""
+    agents_enabled: list[str] = ["Support", "DevOps", "Sales", "Finance", "Legal", "HR", "Marketing"]
 
 
 class OrgOut(BaseModel):
@@ -44,7 +45,7 @@ async def list_organizations():
             description=org["description"],
             industry=org["industry"],
             document_count=len(docs),
-            agents_enabled=org["agents_enabled"],
+            agents_enabled=org.get("agents_enabled", []),
         ))
     return result
 
@@ -52,11 +53,12 @@ async def list_organizations():
 @router.post("/", response_model=OrgOut)
 async def create_organization(body: OrgCreate):
     org_id = str(uuid.uuid4())
+    # If UI doesn't send agents_enabled, it defaults to the list in OrgCreate
     _ORGS[org_id] = {
         "name": body.name,
         "description": body.description,
         "industry": body.industry,
-        "agents_enabled": ["Support", "DevOps", "Sales", "Finance", "Legal", "HR", "Marketing"],
+        "agents_enabled": body.agents_enabled,
     }
     _DOCS[org_id] = []
     return OrgOut(
@@ -65,7 +67,7 @@ async def create_organization(body: OrgCreate):
         description=body.description,
         industry=body.industry,
         document_count=0,
-        agents_enabled=["Support", "DevOps", "Sales", "Finance", "Legal", "HR", "Marketing"],
+        agents_enabled=body.agents_enabled,
     )
 
 
@@ -134,15 +136,36 @@ async def upload_document(org_id: str, file: UploadFile = File(...)):
     try:
         from memory.qdrant_semantic import qdrant_retriever
         from core.db import qdrant_client, insert_semantic_memory
+        from langchain_openai import OpenAIEmbeddings
+
         if text and qdrant_client:
-            dummy_vector = [0.0] * 1536   # Replace with real embedding in production
+            embeddings_model = OpenAIEmbeddings(model="text-embedding-3-small")
+            # Chunking could be more robust, but using the first 2000 chars for now
+            chunk = text[:2000]
+            vector = embeddings_model.embed_query(chunk)
             insert_semantic_memory(
-                text=text[:2000],
-                vector=dummy_vector,
+                text=chunk,
+                vector=vector,
                 metadata={"tenant_id": org_id, "filename": file.filename, "doc_id": doc_id}
             )
     except Exception as e:
         print(f"Warning: Qdrant indexing failed – {e}")
+
+    # ── Index text into Neo4j Graph DB under this org's tenant namespace ──
+    try:
+        from memory.neo4j_graph import graph_memory
+        if text and graph_memory.driver:
+            with graph_memory.driver.session() as session:
+                # Basic node creation for uploaded document to knowledge graph
+                session.run(
+                    "MERGE (o:Organization {id: $org_id}) "
+                    "MERGE (d:Document {id: $doc_id, name: $filename}) "
+                    "MERGE (o)-[:OWNS]->(d) "
+                    "SET d.content = $text",
+                    org_id=org_id, doc_id=doc_id, filename=file.filename, text=text[:500]
+                )
+    except Exception as e:
+        print(f"Warning: Neo4j indexing failed - {e}")
 
     return {"status": "uploaded", "document": doc_meta}
 

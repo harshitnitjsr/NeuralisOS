@@ -45,9 +45,20 @@ async def chat_with_agent(request: ChatRequest):
         else:
             last_message = "No response generated."
             
+        next_agent = final_state.get("next_agent", "unknown")
+        
+        # Save episodic memory to learn from interactions
+        try:
+            from memory.mem0_episodic import episodic_memory
+            episodic_text = f"User asked: '{request.query}'. Agent '{next_agent}' responded: '{last_message}'"
+            episodic_memory.store_context(request.user_id, request.tenant_id, episodic_text)
+        except Exception as e:
+            print(f"Warning: Episodic Memory store failed - {e}")
+            
         return {
             "response": last_message,
-            "next_agent": final_state.get("next_agent", "unknown")
+            "next_agent": next_agent,
+            "memory_context": final_state.get("memory_context", "")
         }
     except Exception as e:
         traceback.print_exc()

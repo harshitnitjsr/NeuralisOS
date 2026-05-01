@@ -88,16 +88,13 @@ export default function DashboardLayout({
 
         <div className="p-5 border-t border-white/[0.05] flex items-center gap-3 bg-white/[0.01]">
           <div className="ring-2 ring-white/10 rounded-full p-[2px] transition-all hover:ring-primary/40">
-            <UserButton
-              afterSignOutUrl="/"
-              appearance={{ elements: { avatarBox: "w-8 h-8" } }}
-            />
+            <UserButton appearance={{ elements: { avatarBox: "w-8 h-8" } }} />
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-medium text-zinc-200">
-              Enterprise Admin
+              Workspace User
             </span>
-            <span className="text-xs text-zinc-500 font-medium">Acme Corp</span>
+            <span className="text-xs text-zinc-500 font-medium">Logged In</span>
           </div>
         </div>
       </div>

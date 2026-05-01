@@ -6,21 +6,25 @@ from langchain_core.messages import SystemMessage
 
 llm = ChatOpenAI(model="gpt-4o", temperature=0).bind_tools(ALL_TOOLS)
 
-def get_support_prompt(company_name: str, context: str) -> str:
+def get_support_prompt(company_name: str, context: str, memory_context: str) -> str:
     return f"""You are the Support Agent for {company_name}.
 Company Context: {context}
+
+Use the following retrieved context graph and memory equally to provide a fast and better response:
+{memory_context}
+
 Your role is to handle customer inquiries, process refunds, and explain SLAs.
-You have access to the lookup_internal_policy tool.
-"""
+You have access to the lookup_internal_policy tool."""
 
 @track_agent_execution(agent_name="support_agent")
 async def support_agent_node(state: AgentState):
     company = state.get("company_name", "a generic company")
     context = state.get("company_context", "")
+    memory_context = state.get("memory_context", "")
     print(f"[{company}] Support Agent processing request...")
     
     messages = state["messages"]
-    sys_msg = SystemMessage(content=get_support_prompt(company, context))
+    sys_msg = SystemMessage(content=get_support_prompt(company, context, memory_context))
     
     try:
         response = await llm.ainvoke([sys_msg] + list(messages))

@@ -29,6 +29,18 @@ class Neo4jClient:
         if not self.driver:
             return ["Graph Memory is offline."]
             
+        real_results = []
+        try:
+            with self.driver.session() as session:
+                result = session.run(
+                    "MATCH (o:Organization {id: $tenant_id})-[:OWNS]->(d:Document) RETURN d.name as filename, d.content as content LIMIT 5",
+                    tenant_id=tenant_id
+                )
+                for record in result:
+                    real_results.append(f"Document Knowledge Graph -> (File: {record['filename']}): {record['content']}")
+        except Exception as e:
+            print(f"Error fetching graph memory from Neo4j: {e}")
+
         # In a real system, you would use an LLM or Graphiti to extract entities from the query
         # and then run an optimized Cypher query.
         # Here we simulate fetching relational paths.
@@ -39,6 +51,6 @@ class Neo4jClient:
         if "refund" in query.lower():
             simulated_results.append("(User) -[PURCHASED]-> (Enterprise Plan) -[ELIGIBLE_FOR]-> (Refund)")
             
-        return simulated_results
+        return real_results + simulated_results
 
 graph_memory = Neo4jClient()

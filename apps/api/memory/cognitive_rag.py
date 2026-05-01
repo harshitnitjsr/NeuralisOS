@@ -13,10 +13,15 @@ class CognitiveRetriever:
     """
     
     async def fetch_semantic(self, query: str, tenant_id: str) -> List[str]:
-        # Using a simulated dense vector for demonstration
-        # In production, query would be passed to an embedding model first
-        dummy_vector = [0.0] * 1536 
-        results = qdrant_retriever.dense_search(query_vector=dummy_vector, limit=2, tenant_id=tenant_id)
+        from langchain_openai import OpenAIEmbeddings
+        
+        try:
+            embeddings_model = OpenAIEmbeddings(model="text-embedding-3-small")
+            query_vector = embeddings_model.embed_query(query)
+            results = qdrant_retriever.dense_search(query_vector=query_vector, limit=2, tenant_id=tenant_id)
+        except Exception as e:
+            print(f"Error fetching semantic embeddings: {e}")
+            results = []
         
         # If Qdrant is empty or offline, fallback to mock data
         if not results:

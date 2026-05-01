@@ -266,7 +266,7 @@ export default function OrgDetailPage() {
           <h1 className="text-2xl font-bold">{org.name}</h1>
           <p className="text-zinc-500 text-sm">
             {org.industry} · {org.document_count} documents ·{" "}
-            {org.agents_enabled.length} agents
+            {org.agents_enabled?.length || 0} agents
           </p>
         </div>
         <div className="ml-auto flex items-center gap-2">

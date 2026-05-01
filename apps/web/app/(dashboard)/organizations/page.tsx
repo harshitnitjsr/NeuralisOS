@@ -41,11 +41,28 @@ export default function OrganizationsPage() {
   const [orgs, setOrgs] = useState<Org[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<{
+    name: string;
+    description: string;
+    industry: string;
+    agents: string[];
+  }>({
     name: "",
     description: "",
     industry: "Technology",
+    agents: ["Support", "Sales"],
   });
+
+  const AVAILABLE_AGENTS = [
+    "Support",
+    "DevOps",
+    "Sales",
+    "Finance",
+    "Legal",
+    "HR",
+    "Marketing",
+  ];
+
   const [creating, setCreating] = useState(false);
 
   const fetchOrgs = async () => {
@@ -71,11 +88,21 @@ export default function OrganizationsPage() {
       const res = await fetch(`${API}/organizations/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          name: form.name,
+          description: form.description,
+          industry: form.industry,
+          agents_enabled: form.agents,
+        }),
       });
       const newOrg = await res.json();
       setOrgs((prev) => [newOrg, ...prev]);
-      setForm({ name: "", description: "", industry: "Technology" });
+      setForm({
+        name: "",
+        description: "",
+        industry: "Technology",
+        agents: ["Support", "Sales"],
+      });
       setShowCreate(false);
     } catch (e) {
       console.error(e);
@@ -178,6 +205,33 @@ export default function OrganizationsPage() {
                     ))}
                   </select>
                 </div>
+                <div>
+                  <label className="text-xs text-zinc-500 mb-1 block">
+                    Enabled Agents
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {AVAILABLE_AGENTS.map((agent) => (
+                      <button
+                        key={agent}
+                        onClick={() => {
+                          setForm((p) => ({
+                            ...p,
+                            agents: p.agents.includes(agent)
+                              ? p.agents.filter((a) => a !== agent)
+                              : [...p.agents, agent],
+                          }));
+                        }}
+                        className={`px-3 py-1.5 text-xs rounded-full border transition-all ${
+                          form.agents.includes(agent)
+                            ? "bg-primary/20 border-primary text-primary-foreground"
+                            : "bg-white/5 border-white/10 text-zinc-400 hover:text-white"
+                        }`}
+                      >
+                        {agent}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               <div className="flex gap-3 pt-2">
@@ -263,8 +317,8 @@ export default function OrganizationsPage() {
                       <FileText className="w-3 h-3" /> {org.document_count} docs
                     </span>
                     <span className="flex items-center gap-1">
-                      <Cpu className="w-3 h-3" /> {org.agents_enabled.length}{" "}
-                      agents
+                      <Cpu className="w-3 h-3" />{" "}
+                      {org.agents_enabled?.length || 0} agents
                     </span>
                   </div>
 

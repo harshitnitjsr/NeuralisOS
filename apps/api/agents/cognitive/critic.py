@@ -29,14 +29,9 @@ async def critic_node(state: AgentState):
     
     try:
         response = await llm.ainvoke([sys_msg, eval_msg])
-        # Add the critic's refined output
-        return {"messages": [AIMessage(content=f"[Critic Verified]: {response.content}")]}
+        if "error" in last_content.lower():
+            print("Critic detected a violation. Blocking.")
+            return {"messages": [AIMessage(content="The action could not be completed safely.")]}
+        return {"messages": []} # Pass through the original agent's response
     except Exception:
-        return {"messages": [AIMessage(content=f"[Critic Pass]: {last_content}")]}
-    
-    # Mock validation rule: if the message contains 'error', we flag it.
-    if "error" in last_msg.content.lower():
-        print("Critic detected a violation. Blocking.")
-        return {"messages": [{"role": "assistant", "content": "The action could not be completed safely."}]}
-    
-    return {"messages": []} # No change to messages, passes through.
+        return {"messages": []}

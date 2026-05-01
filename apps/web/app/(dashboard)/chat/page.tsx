@@ -72,6 +72,7 @@ interface Message {
   content: string;
   agent?: string;
   memoryFetched?: boolean;
+  memoryContext?: string;
   timestamp: Date;
 }
 
@@ -143,6 +144,7 @@ function ChatInner() {
           content: data.response || "No response generated.",
           agent: data.next_agent || "unknown",
           memoryFetched: true,
+          memoryContext: data.memory_context || "",
           timestamp: new Date(),
         },
       ]);
@@ -312,6 +314,15 @@ function ChatInner() {
                 >
                   {msg.content}
                 </div>
+
+                {msg.memoryContext && (
+                  <div className="mt-2 p-3 bg-black/40 border border-white/10 rounded-xl text-[10px] text-zinc-400 font-mono whitespace-pre-wrap overflow-x-auto w-full">
+                    <div className="text-zinc-500 mb-1 font-bold">
+                      Knowledge Graph & Context Memory:
+                    </div>
+                    {msg.memoryContext}
+                  </div>
+                )}
 
                 <span className="text-[10px] text-zinc-600 px-2 font-medium tracking-wide">
                   {msg.timestamp.toLocaleTimeString([], {
